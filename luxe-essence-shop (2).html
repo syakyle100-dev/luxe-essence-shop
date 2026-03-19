@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Luxe Essence | Artisan Perfumery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'serif'],
+                        sans:  ['Jost', 'sans-serif'],
+                    },
+                    colors: {
+                        gold: { 50:'#fdf9f0',100:'#fbf0d9',200:'#f6e0b3',300:'#edc67a',400:'#e3a947',500:'#d4902a',600:'#b87620',700:'#945d1d',800:'#7a4d1e',900:'#653f1b' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        html,body { overflow-x:hidden; font-family:'Jost',sans-serif; }
+
+        /* Glass top nav */
+        .glass {
+            background:rgba(255,255,255,0.95);
+            backdrop-filter:blur(16px);
+            -webkit-backdrop-filter:blur(16px);
+            border-bottom:1px solid rgba(212,144,42,0.18);
+        }
+
+        /* Bottom nav – mobile only */
+        #bottom-nav {
+            position:fixed; bottom:0; left:0; right:0; z-index:40;
+            background:#1c1917;
+            display:flex; align-items:stretch; height:62px;
+            box-shadow:0 -4px 24px rgba(0,0,0,0.2);
+        }
+        #bottom-nav button {
+            flex:1; display:flex; flex-direction:column;
+            align-items:center; justify-content:center; gap:3px;
+            color:#a8a29e; font-size:10px; font-family:'Jost',sans-serif;
+            font-weight:500; letter-spacing:0.05em; text-transform:uppercase;
+            border:none; background:none; cursor:pointer;
+            transition:color 0.18s; position:relative;
+        }
+        #bottom-nav button i { font-size:19px; }
+        #bottom-nav button.active { color:#d4902a; }
+
+        /* Page sections – leave room for both navs */
+        .page-section { padding-top:68px; padding-bottom:80px; }
+        @media(min-width:768px) {
+            .page-section { padding-top:88px; padding-bottom:48px; }
+            #bottom-nav { display:none; }
+        }
+
+        /* Product card */
+        .product-card {
+            border-radius:16px; overflow:hidden; background:white;
+            box-shadow:0 2px 12px rgba(0,0,0,0.07);
+            transition:transform 0.32s cubic-bezier(0.4,0,0.2,1), box-shadow 0.32s ease;
+        }
+        @media(hover:hover){
+            .product-card:hover { transform:translateY(-6px); box-shadow:0 20px 48px -8px rgba(0,0,0,0.16); }
+            .product-card:hover img { transform:scale(1.06); }
+        }
+        .product-card img { display:block; width:100%; object-fit:cover; transition:transform 0.55s ease; }
+
+        /* Always-visible Add to Cart button at bottom of card */
+        .card-add-btn {
+            display:block; width:100%; padding:11px 0;
+            background:#1c1917; color:white; font-family:'Jost',sans-serif;
+            font-weight:600; font-size:13px; letter-spacing:0.05em;
+            text-align:center; border:none; cursor:pointer; transition:background 0.18s;
+        }
+        .card-add-btn:active, .card-add-btn:hover { background:#d4902a; }
+        .card-add-btn.sold-out { background:#a8a29e; cursor:not-allowed; }
+
+        /* Cart panel */
+        .cart-panel {
+            transform:translateX(100%);
+            transition:transform 0.32s cubic-bezier(0.4,0,0.2,1);
+        }
+        .cart-panel.open { transform:translateX(0); }
+
+        /* Toast */
+        .toast { transform:translateY(110px); opacity:0; transition:all 0.26s ease; }
+        .toast.show  { transform:translateY(0);   opacity:1; }
+
+        /* Modal */
+        .modal-bg { opacity:0; pointer-events:none; transition:opacity 0.24s ease; }
+        .modal-bg.open { opacity:1; pointer-events:all; }
+        .modal-box { transform:scale(0.93) translateY(14px); transition:all 0.26s ease; }
+        .modal-bg.open .modal-box { transform:scale(1) translateY(0); }
+
+        /* Animations */
+        .fade-in { animation:fadeUp 0.5s ease both; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        .s1{animation-delay:0.07s} .s2{animation-delay:0.14s} .s3{animation-delay:0.21s}
+
+        /* Buttons */
+        .btn-gold {
+            background:linear-gradient(135deg,#b87620,#d4902a,#edc67a);
+            background-size:200% auto; border:none; cursor:pointer;
+            transition:background-position 0.32s, box-shadow 0.22s;
+        }
+        .btn-gold:hover, .btn-gold:active {
+            background-position:right center;
+            box-shadow:0 6px 20px -4px rgba(184,118,32,0.45);
+        }
+        .whatsapp-btn {
+            background:linear-gradient(135deg,#128C7E,#25D366);
+            border:none; cursor:pointer; transition:box-shadow 0.22s;
+        }
+        .whatsapp-btn:hover,.whatsapp-btn:active { box-shadow:0 6px 20px -4px rgba(37,211,102,0.4); }
+
+        /* Qty buttons */
+        .qty-btn {
+            width:34px; height:34px; border-radius:50%;
+            border:1.5px solid #d6d3d1; background:white;
+            display:flex; align-items:center; justify-content:center;
+            cursor:pointer; font-weight:700; font-size:17px;
+            flex-shrink:0; transition:all 0.16s;
+        }
+        .qty-btn:active,.qty-btn:hover { background:#1c1917; color:white; border-color:#1c1917; }
+
+        /* Filter pills */
+        .filter-btn { transition:all 0.16s; white-space:nowrap; }
+        .filter-btn.active { background:#1c1917!important; color:white!important; border-color:#1c1917!important; }
+
+        /* Inputs */
+        input,textarea,select { font-family:'Jost',sans-serif; }
+        input:focus,textarea:focus,select:focus {
+            outline:none; border-color:#d4902a!important;
+            box-shadow:0 0 0 3px rgba(212,144,42,0.15);
+        }
+
+        ::-webkit-scrollbar { width:4px; }
+        ::-webkit-scrollbar-thumb { background:#d4902a; border-radius:2px; }
+
+        .badge-tag { font-size:10px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; }
+
+        .gold-line::after {
+            content:''; display:block; width:48px; height:2px;
+            background:linear-gradient(90deg,#d4902a,#edc67a); margin:14px auto 0;
+        }
+
+        /* About WhatsApp cards */
+        .wa-card {
+            display:flex; align-items:center; justify-content:center;
+            gap:10px; padding:15px 20px; border-radius:14px;
+            text-decoration:none; color:white; font-weight:600; font-size:15px;
+            background:linear-gradient(135deg,#128C7E,#25D366);
+            transition:box-shadow 0.2s;
+        }
+        .wa-card:active { box-shadow:0 4px 16px rgba(37,211,102,0.4); }
+
+        /* Inventory row */
+        .inv-row {
+            display:flex; align-items:center; gap:12px;
+            padding:12px; background:#fafaf9;
+            border-radius:14px; border:1px solid #e7e5e4;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased">
+
+<!-- ===== TOP NAV ===== -->
+<nav class="fixed w-full z-40 glass">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16 sm:h-20">
+            <!-- Logo -->
+            <div class="flex items-center gap-2 cursor-pointer shrink-0" onclick="showSection('shop')">
+                <i class="fa-solid fa-spray-can-sparkles text-gold-500 text-xl sm:text-2xl"></i>
+                <div>
+                    <span class="font-serif text-lg sm:text-2xl font-bold text-stone-900 tracking-tight block leading-none">Luxe Essence</span>
+                    <span class="hidden sm:block text-xs text-gold-600 tracking-widest uppercase">Artisan Perfumery</span>
+                </div>
+            </div>
+            <!-- Desktop nav links -->
+            <div class="hidden md:flex items-center gap-8">
+                <button onclick="showSection('shop')"  class="text-stone-500 hover:text-gold-600 font-medium tracking-wide transition text-sm uppercase">Collection</button>
+                <button onclick="showSection('admin')" class="text-stone-500 hover:text-gold-600 font-medium tracking-wide transition text-sm uppercase">Seller Portal</button>
+                <button onclick="showSection('about')" class="text-stone-500 hover:text-gold-600 font-medium tracking-wide transition text-sm uppercase">About</button>
+            </div>
+            <!-- Cart icon -->
+            <button onclick="toggleCart()" class="relative p-2 hover:bg-stone-100 rounded-full transition group ml-2">
+                <i class="fa-solid fa-bag-shopping text-xl text-stone-600 group-hover:text-gold-600 transition"></i>
+                <span id="cart-badge" class="absolute -top-1 -right-1 bg-gold-500 text-white text-xs font-bold rounded-full h-5 w-5 items-center justify-center hidden">0</span>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ===== BOTTOM NAV (mobile) ===== -->
+<div id="bottom-nav">
+    <button id="btn-shop"  onclick="showSection('shop')"  class="active"><i class="fa-solid fa-store"></i>Shop</button>
+    <button id="btn-admin" onclick="showSection('admin')"><i class="fa-solid fa-shield-halved"></i>Admin</button>
+    <button id="btn-about" onclick="showSection('about')"><i class="fa-solid fa-info-circle"></i>About</button>
+    <button onclick="toggleCart()" style="position:relative;">
+        <i class="fa-solid fa-bag-shopping"></i>Cart
+        <span id="cart-badge-m" class="absolute top-2 right-5 bg-gold-500 text-white text-[10px] font-bold rounded-full h-4 w-4 items-center justify-center hidden">0</span>
+    </button>
+</div>
+
+<!-- ===== CART OVERLAY ===== -->
+<div id="cart-overlay" class="fixed inset-0 bg-black/40 z-40 hidden" onclick="toggleCart()"></div>
+
+<!-- ===== CART PANEL ===== -->
+<div id="cart-panel" class="cart-panel fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-2xl z-50 flex flex-col">
+    <div class="p-5 border-b border-stone-100 flex justify-between items-center">
+        <div>
+            <h2 class="font-serif text-2xl font-bold text-stone-900">Your Selection</h2>
+            <p class="text-xs text-stone-400 mt-0.5">Review before ordering</p>
+        </div>
+        <button onclick="toggleCart()" class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
+            <i class="fa-solid fa-xmark text-stone-500 text-lg"></i>
+        </button>
+    </div>
+    <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+    <div class="p-5 border-t border-stone-100 space-y-3" style="padding-bottom:max(20px,env(safe-area-inset-bottom));">
+        <div class="flex justify-between items-baseline">
+            <span class="text-stone-500 text-sm uppercase tracking-wider">Total</span>
+            <span id="cart-total" class="font-serif text-3xl font-bold text-stone-900">R0</span>
+        </div>
+        <button onclick="openWhatsApp()" class="whatsapp-btn w-full text-white py-4 rounded-xl font-semibold shadow-lg flex items-center justify-center gap-3 text-base">
+            <i class="fa-brands fa-whatsapp text-2xl"></i><span>Order via WhatsApp</span>
+        </button>
+        <p class="text-xs text-stone-400 text-center">You'll be sent to WhatsApp to confirm your order</p>
+    </div>
+</div>
+
+<!-- ===== SHOP SECTION ===== -->
+<section id="shop-section" class="page-section min-h-screen">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+
+        <!-- Hero -->
+        <div class="text-center py-8 sm:py-14 mb-6 fade-in">
+            <p class="badge-tag text-gold-600 mb-3 s1 fade-in">Handcrafted · Small Batch · Ethically Sourced</p>
+            <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold text-stone-900 mb-4 leading-tight s2 fade-in">
+                Scents of <em class="text-gold-500">Distinction</em>
+            </h1>
+            <p class="text-base sm:text-lg text-stone-500 max-w-xl mx-auto leading-relaxed px-2 s3 fade-in">
+                Curated artisanal fragrances crafted with the world's finest ingredients — each bottle a story.
+            </p>
+        </div>
+
+        <!-- Filters (horizontal scroll on mobile) -->
+        <div class="flex gap-2 mb-7 overflow-x-auto pb-1" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+            <button onclick="filterProducts('all',this)"      class="filter-btn active shrink-0 px-5 py-2 rounded-full border border-stone-300 text-sm font-medium">All</button>
+            <button onclick="filterProducts('floral',this)"   class="filter-btn shrink-0 px-5 py-2 rounded-full border border-stone-300 text-stone-500 text-sm font-medium">🌸 Floral</button>
+            <button onclick="filterProducts('woody',this)"    class="filter-btn shrink-0 px-5 py-2 rounded-full border border-stone-300 text-stone-500 text-sm font-medium">🌲 Woody</button>
+            <button onclick="filterProducts('oriental',this)" class="filter-btn shrink-0 px-5 py-2 rounded-full border border-stone-300 text-stone-500 text-sm font-medium">✨ Oriental</button>
+            <button onclick="filterProducts('fresh',this)"    class="filter-btn shrink-0 px-5 py-2 rounded-full border border-stone-300 text-stone-500 text-sm font-medium">🍃 Fresh</button>
+        </div>
+
+        <!-- 2-col grid on mobile, 3-col on desktop -->
+        <div id="product-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6"></div>
+        <div id="empty-shop" class="hidden text-center py-20 text-stone-400">
+            <i class="fa-solid fa-bottle-droplet text-5xl mb-4 opacity-30"></i>
+            <p class="text-base">No fragrances in this category yet.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ===== ADMIN SECTION ===== -->
+<section id="admin-section" class="page-section min-h-screen hidden bg-stone-100">
+    <div class="max-w-3xl mx-auto px-3 sm:px-6">
+
+        <!-- LOGIN GATE -->
+        <div id="admin-login" class="flex items-center justify-center" style="min-height:65vh;">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center fade-in">
+                <div class="w-14 h-14 bg-stone-900 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <i class="fa-solid fa-lock text-gold-400 text-xl"></i>
+                </div>
+                <h2 class="font-serif text-2xl font-bold text-stone-900 mb-1">Seller Portal</h2>
+                <p class="text-stone-400 text-sm mb-6">Enter your admin password to continue</p>
+                <div class="relative mb-3">
+                    <input type="password" id="admin-pw" placeholder="Password"
+                        class="w-full px-4 py-4 pr-12 rounded-xl border border-stone-200 text-stone-800 text-center tracking-widest text-base"
+                        onkeydown="if(event.key==='Enter')checkPw()">
+                    <button onclick="togglePwVis()" type="button"
+                        style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#a8a29e;">
+                        <i id="pw-eye" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <div id="login-error" class="hidden text-red-500 text-sm mb-3 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation"></i><span>Incorrect password. Try again.</span>
+                </div>
+                <button onclick="checkPw()" class="btn-gold w-full text-white py-4 rounded-xl font-semibold shadow-lg flex items-center justify-center gap-2 text-base">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i><span>Unlock Dashboard</span>
+                </button>
+                <p class="text-xs text-stone-300 mt-5">🔐 Authorised access only</p>
+            </div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="admin-dashboard" class="hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-stone-900">Seller Dashboard</h2>
+                    <p class="text-stone-400 mt-1 text-sm">Manage your fragrance inventory</p>
+                </div>
+                <button onclick="adminLogout()" class="flex items-center gap-2 bg-white border border-stone-200 hover:border-red-300 hover:text-red-500 text-stone-500 px-4 py-2 rounded-xl text-sm font-semibold transition shadow-sm">
+                    <i class="fa-solid fa-lock"></i><span>Lock</span>
+                </button>
+            </div>
+
+            <!-- Add form -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-8 mb-6">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="w-8 h-8 bg-gold-100 rounded-lg flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-plus text-gold-600 text-sm"></i>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-stone-900">Add New Fragrance</h3>
+                </div>
+                <form id="product-form" class="space-y-4" onsubmit="addProduct(event)">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Name *</label>
+                            <input type="text" id="prod-name" required class="w-full px-4 py-3 rounded-lg border border-stone-200 text-stone-800 text-base" placeholder="e.g., Midnight Rose">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Price (R) *</label>
+                            <input type="number" id="prod-price" required min="0" step="0.01" class="w-full px-4 py-3 rounded-lg border border-stone-200 text-stone-800 text-base" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Category</label>
+                            <select id="prod-category" class="w-full px-4 py-3 rounded-lg border border-stone-200 text-stone-800 bg-white text-base">
+                                <option value="floral">🌸 Floral</option>
+                                <option value="woody">🌲 Woody</option>
+                                <option value="oriental">✨ Oriental</option>
+                                <option value="fresh">🍃 Fresh</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Stock *</label>
+                            <input type="number" id="prod-stock" required min="0" class="w-full px-4 py-3 rounded-lg border border-stone-200 text-stone-800 text-base" placeholder="Bottles available">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Description *</label>
+                        <textarea id="prod-desc" required rows="3" class="w-full px-4 py-3 rounded-lg border border-stone-200 text-stone-800 resize-none text-base" placeholder="Notes, inspiration, ingredients..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Image URL <span class="normal-case font-normal text-stone-400">(optional)</span></label>
+                        <input type="url" id="prod-image" class="w-full px-4 py-3 rounded-lg border border-stone-200 text-stone-800 text-base" placeholder="https://...">
+                    </div>
+                    <button type="submit" class="btn-gold w-full text-white py-4 rounded-xl font-semibold shadow-lg flex items-center justify-center gap-2 text-base">
+                        <i class="fa-solid fa-plus"></i><span>Add to Collection</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Inventory list -->
+            <div class="bg-white rounded-2xl shadow-lg p-5 sm:p-8">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="font-serif text-xl font-bold text-stone-900">Inventory</h3>
+                    <span id="inv-count" class="text-sm text-stone-400 font-medium">0 products</span>
+                </div>
+                <div id="inventory-list" class="space-y-3"></div>
+                <div id="empty-inventory" class="hidden text-center py-10 text-stone-400">
+                    <i class="fa-solid fa-box-open text-4xl mb-3 opacity-30"></i>
+                    <p>No products yet. Add some above!</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ===== ABOUT SECTION ===== -->
+<section id="about-section" class="page-section min-h-screen hidden">
+    <div class="max-w-2xl mx-auto px-4 text-center">
+        <p class="badge-tag text-gold-600 mb-4">Our Story</p>
+        <h2 class="font-serif text-4xl sm:text-5xl font-bold text-stone-900 mb-3 gold-line">About Luxe Essence</h2>
+        <p class="text-base sm:text-lg text-stone-500 mt-8 mb-5 leading-relaxed">
+            We believe fragrance is the most intimate form of expression. Each scent in our collection is hand-blended in small batches using ethically sourced ingredients from around the globe.
+        </p>
+        <div class="grid grid-cols-3 gap-3 sm:gap-6 mb-10">
+            <div class="p-4 sm:p-6 bg-white rounded-2xl shadow-md">
+                <i class="fa-solid fa-leaf text-2xl sm:text-3xl text-gold-500 mb-2"></i>
+                <h3 class="font-bold text-stone-900 text-sm sm:text-base">Natural</h3>
+                <p class="text-xs text-stone-400 mt-1 hidden sm:block">100% organic ingredients</p>
+            </div>
+            <div class="p-4 sm:p-6 bg-white rounded-2xl shadow-md">
+                <i class="fa-solid fa-hand-holding-heart text-2xl sm:text-3xl text-gold-500 mb-2"></i>
+                <h3 class="font-bold text-stone-900 text-sm sm:text-base">Artisan</h3>
+                <p class="text-xs text-stone-400 mt-1 hidden sm:block">Handcrafted with care</p>
+            </div>
+            <div class="p-4 sm:p-6 bg-white rounded-2xl shadow-md">
+                <i class="fa-brands fa-whatsapp text-2xl sm:text-3xl text-gold-500 mb-2"></i>
+                <h3 class="font-bold text-stone-900 text-sm sm:text-base">Easy Orders</h3>
+                <p class="text-xs text-stone-400 mt-1 hidden sm:block">Order via WhatsApp</p>
+            </div>
+        </div>
+        <div class="p-6 bg-stone-900 rounded-2xl text-white">
+            <p class="text-gold-400 text-xs uppercase tracking-widest mb-2">Contact Us</p>
+            <p class="font-serif text-2xl font-bold mb-5">Ready to order?</p>
+            <div class="flex flex-col gap-3">
+                <a href="https://wa.me/27761077323" target="_blank" class="wa-card">
+                    <i class="fa-brands fa-whatsapp text-xl"></i> 076 107 7323
+                </a>
+                <a href="https://wa.me/27798330298" target="_blank" class="wa-card">
+                    <i class="fa-brands fa-whatsapp text-xl"></i> 079 833 0298
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== EDIT MODAL ===== -->
+<div id="edit-modal" class="modal-bg fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="modal-box bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-5">
+            <h3 class="font-serif text-2xl font-bold text-stone-900">Edit Product</h3>
+            <button onclick="closeEditModal()" class="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center">
+                <i class="fa-solid fa-xmark text-stone-500"></i>
+            </button>
+        </div>
+        <form id="edit-form" class="space-y-4" onsubmit="saveEdit(event)">
+            <input type="hidden" id="edit-id">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Name</label>
+                    <input type="text" id="edit-name" required class="w-full px-3 py-3 rounded-lg border border-stone-200 text-stone-800 text-base">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Price (R)</label>
+                    <input type="number" id="edit-price" required min="0" step="0.01" class="w-full px-3 py-3 rounded-lg border border-stone-200 text-stone-800 text-base">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Category</label>
+                    <select id="edit-category" class="w-full px-3 py-3 rounded-lg border border-stone-200 text-stone-800 bg-white text-base">
+                        <option value="floral">Floral</option>
+                        <option value="woody">Woody</option>
+                        <option value="oriental">Oriental</option>
+                        <option value="fresh">Fresh</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Stock</label>
+                    <input type="number" id="edit-stock" required min="0" class="w-full px-3 py-3 rounded-lg border border-stone-200 text-stone-800 text-base">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Sold (adjust)</label>
+                <input type="number" id="edit-sold" min="0" class="w-full px-3 py-3 rounded-lg border border-stone-200 text-stone-800 text-base">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Description</label>
+                <textarea id="edit-desc" required rows="3" class="w-full px-3 py-3 rounded-lg border border-stone-200 text-stone-800 resize-none text-base"></textarea>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1.5">Image URL</label>
+                <input type="url" id="edit-image" class="w-full px-3 py-3 rounded-lg border border-stone-200 text-stone-800 text-base">
+            </div>
+            <button type="submit" class="btn-gold w-full text-white py-4 rounded-xl font-semibold shadow-lg flex items-center justify-center gap-2 text-base">
+                <i class="fa-solid fa-floppy-disk"></i><span>Save Changes</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toast" class="toast fixed bottom-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-stone-900 text-white px-5 py-3 rounded-2xl shadow-2xl whitespace-nowrap md:bottom-8 md:left-auto md:right-8 md:translate-x-0">
+    <span id="toast-icon" class="text-gold-400 text-base"><i class="fa-solid fa-check-circle"></i></span>
+    <span id="toast-msg" class="text-sm font-medium">Done!</span>
+</div>
+
+<script>
+// ===== DATA =====
+let products = [
+    {id:1,name:"Midnight Oud",   price:1850,category:"woody",  stock:12,description:"Rich agarwood blended with amber and vanilla. A mysterious, deep fragrance for evening wear.",  image:"https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&auto=format&fit=crop&q=60",sold:5},
+    {id:2,name:"Garden of Eden", price:1450,category:"floral", stock:8, description:"Bulgarian rose, jasmine sambac, and lily of the valley. Fresh, romantic, and timeless.",         image:"https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&auto=format&fit=crop&q=60",sold:12},
+    {id:3,name:"Citrus Vert",    price:1200,category:"fresh",  stock:20,description:"Sicilian lemon, bergamot, and green tea leaves. Crisp, energizing, and modern.",                image:"https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=500&auto=format&fit=crop&q=60",sold:8}
+];
+let cart = [], currentFilter = 'all';
+const WA = ['27761077323','27798330298'];
+const ADMIN_PW = 'LuxeAdmin2024';
+let adminUnlocked = false;
+const PLACEHOLDERS = [
+    'https://images.unsplash.com/photo-1645651993743-c527db49d89e?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1600612253971-1e1e4e62d7a5?w=500&auto=format&fit=crop&q=60',
+];
+const ERR_IMG = 'https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=400&auto=format&fit=crop&q=60';
+
+document.addEventListener('DOMContentLoaded', () => { renderProducts(); renderCart(); });
+
+// ===== NAVIGATION =====
+function showSection(name) {
+    ['shop','admin','about'].forEach(s => document.getElementById(s+'-section').classList.add('hidden'));
+    document.getElementById(name+'-section').classList.remove('hidden');
+    if (name !== 'admin') adminLogout();
+    ['shop','admin','about'].forEach(s => {
+        const b = document.getElementById('btn-'+s);
+        if (b) b.classList.toggle('active', s===name);
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== PRODUCTS =====
+function renderProducts() {
+    const grid  = document.getElementById('product-grid');
+    const empty = document.getElementById('empty-shop');
+    const list  = currentFilter==='all' ? products : products.filter(p=>p.category===currentFilter);
+    if (!list.length) { grid.innerHTML=''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    grid.innerHTML = list.map((p,i) => {
+        const img = p.image || PLACEHOLDERS[i%PLACEHOLDERS.length];
+        const out = p.stock<=0, low = !out && p.stock<5;
+        return `
+        <div class="product-card fade-in" style="animation-delay:${i*0.06}s">
+            <div style="position:relative;overflow:hidden;height:170px;background:#f5f4f0;">
+                <img src="${img}" alt="${p.name}" style="height:170px;width:100%;object-fit:cover;"
+                     onerror="this.src='${ERR_IMG}'">
+                ${low?`<div style="position:absolute;top:7px;left:7px;background:#f59e0b;color:white;font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:20px;">Low Stock</div>`:''}
+                ${out?`<div style="position:absolute;top:7px;left:7px;background:#ef4444;color:white;font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:20px;">Sold Out</div>`:''}
+                <div style="position:absolute;top:7px;right:7px;background:rgba(255,255,255,0.9);color:#57534e;font-size:9px;font-weight:600;letter-spacing:0.07em;text-transform:capitalize;padding:3px 8px;border-radius:20px;">${p.category}</div>
+            </div>
+            <div style="padding:11px 11px 8px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:5px;margin-bottom:4px;">
+                    <h3 style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:#1c1917;line-height:1.2;">${p.name}</h3>
+                    <span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:#b87620;white-space:nowrap;flex-shrink:0;">R${p.price.toLocaleString()}</span>
+                </div>
+                <p style="font-size:11px;color:#a8a29e;line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.description}</p>
+                <p style="font-size:11px;color:#d6d3d1;margin-bottom:8px;">${p.stock} in stock</p>
+            </div>
+            <button class="card-add-btn${out?' sold-out':''}" onclick="${out?'void(0)':'addToCart('+p.id+')'}">
+                ${out?'Out of Stock':'＋ Add to Cart'}
+            </button>
+        </div>`;
+    }).join('');
+}
+
+function filterProducts(cat, btn) {
+    currentFilter = cat;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    renderProducts();
+}
+
+// ===== ADMIN AUTH =====
+function checkPw() {
+    const val = document.getElementById('admin-pw').value;
+    const err = document.getElementById('login-error');
+    if (val === ADMIN_PW) {
+        adminUnlocked = true;
+        err.classList.add('hidden');
+        document.getElementById('admin-login').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        renderInventory();
+        toast('🔓 Welcome back, Admin!');
+    } else {
+        err.classList.remove('hidden');
+        const inp = document.getElementById('admin-pw');
+        inp.value=''; inp.style.borderColor='#ef4444';
+        setTimeout(()=>inp.style.borderColor='',1400);
+    }
+}
+function adminLogout() {
+    adminUnlocked = false;
+    const l=document.getElementById('admin-login'), d=document.getElementById('admin-dashboard');
+    if(l) l.classList.remove('hidden');
+    if(d) d.classList.add('hidden');
+    const inp=document.getElementById('admin-pw'), err=document.getElementById('login-error');
+    if(inp) inp.value='';
+    if(err) err.classList.add('hidden');
+}
+function togglePwVis() {
+    const inp=document.getElementById('admin-pw'), eye=document.getElementById('pw-eye');
+    if(inp.type==='password'){inp.type='text';eye.classList.replace('fa-eye','fa-eye-slash');}
+    else{inp.type='password';eye.classList.replace('fa-eye-slash','fa-eye');}
+}
+
+// ===== ADD PRODUCT =====
+function addProduct(e) {
+    e.preventDefault();
+    products.push({
+        id:Date.now(),
+        name:document.getElementById('prod-name').value.trim(),
+        price:parseFloat(document.getElementById('prod-price').value),
+        category:document.getElementById('prod-category').value,
+        stock:parseInt(document.getElementById('prod-stock').value),
+        description:document.getElementById('prod-desc').value.trim(),
+        image:document.getElementById('prod-image').value.trim(),
+        sold:0
+    });
+    renderProducts(); renderInventory();
+    toast('✅ Product added!'); e.target.reset();
+}
+
+// ===== INVENTORY =====
+function renderInventory() {
+    const list=document.getElementById('inventory-list');
+    const empty=document.getElementById('empty-inventory');
+    const cnt=document.getElementById('inv-count');
+    if(!list) return;
+    cnt.textContent=products.length+' product'+(products.length!==1?'s':'');
+    if(!products.length){list.innerHTML='';empty.classList.remove('hidden');return;}
+    empty.classList.add('hidden');
+    list.innerHTML=products.map(p=>{
+        const img=p.image||PLACEHOLDERS[0];
+        return `<div class="inv-row">
+            <img src="${img}" style="width:52px;height:52px;object-fit:cover;border-radius:10px;flex-shrink:0;background:#e7e5e4;" onerror="this.src='${ERR_IMG}'">
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;color:#1c1917;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
+                <div style="font-size:11px;color:#a8a29e;margin-top:2px;">📦 ${p.stock} &nbsp;·&nbsp; ✅ sold: ${p.sold} &nbsp;·&nbsp; ${p.category}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
+                <span style="font-family:'Cormorant Garamond',serif;font-weight:700;color:#b87620;font-size:15px;">R${p.price.toLocaleString()}</span>
+                <button onclick="openEdit(${p.id})" style="width:34px;height:34px;background:#eff6ff;border:none;border-radius:10px;color:#2563eb;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <i class="fa-solid fa-pen" style="font-size:12px;"></i>
+                </button>
+                <button onclick="deleteProduct(${p.id})" style="width:34px;height:34px;background:#fef2f2;border:none;border-radius:10px;color:#ef4444;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <i class="fa-solid fa-trash" style="font-size:12px;"></i>
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function deleteProduct(id) {
+    if(!confirm('Remove this product?')) return;
+    products=products.filter(p=>p.id!==id);
+    cart=cart.filter(c=>c.id!==id);
+    renderProducts(); renderInventory(); renderCart();
+    toast('🗑️ Product removed');
+}
+
+// ===== EDIT MODAL =====
+function openEdit(id) {
+    const p=products.find(x=>x.id===id); if(!p) return;
+    document.getElementById('edit-id').value=p.id;
+    document.getElementById('edit-name').value=p.name;
+    document.getElementById('edit-price').value=p.price;
+    document.getElementById('edit-category').value=p.category;
+    document.getElementById('edit-stock').value=p.stock;
+    document.getElementById('edit-sold').value=p.sold;
+    document.getElementById('edit-desc').value=p.description;
+    document.getElementById('edit-image').value=p.image||'';
+    document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal(){document.getElementById('edit-modal').classList.remove('open');}
+function saveEdit(e){
+    e.preventDefault();
+    const id=parseInt(document.getElementById('edit-id').value);
+    const p=products.find(x=>x.id===id); if(!p) return;
+    p.name=document.getElementById('edit-name').value.trim();
+    p.price=parseFloat(document.getElementById('edit-price').value);
+    p.category=document.getElementById('edit-category').value;
+    p.stock=parseInt(document.getElementById('edit-stock').value);
+    p.sold=parseInt(document.getElementById('edit-sold').value)||0;
+    p.description=document.getElementById('edit-desc').value.trim();
+    p.image=document.getElementById('edit-image').value.trim();
+    const ci=cart.find(c=>c.id===id);
+    if(ci){ci.name=p.name;ci.price=p.price;ci.image=p.image;}
+    renderProducts(); renderInventory(); renderCart();
+    closeEditModal(); toast('✏️ Product updated!');
+}
+
+// ===== CART =====
+function addToCart(id){
+    const p=products.find(x=>x.id===id);
+    if(!p||p.stock<=0){toast('❌ Out of stock',true);return;}
+    const ex=cart.find(c=>c.id===id);
+    if(ex){if(ex.quantity>=p.stock){toast('⚠️ Max stock reached',true);return;}ex.quantity++;}
+    else cart.push({id:p.id,name:p.name,price:p.price,image:p.image,quantity:1});
+    renderCart(); toast('🛍️ Added to selection!');
+    document.getElementById('cart-panel').classList.add('open');
+    document.getElementById('cart-overlay').classList.remove('hidden');
+}
+function updateQty(id,d){
+    const p=products.find(x=>x.id===id), item=cart.find(c=>c.id===id);
+    if(!item) return;
+    if(d>0&&item.quantity>=(p?p.stock:9999)){toast('⚠️ Max stock reached',true);return;}
+    item.quantity+=d;
+    if(item.quantity<=0) removeFromCart(id); else renderCart();
+}
+function removeFromCart(id){cart=cart.filter(c=>c.id!==id);renderCart();}
+function renderCart(){
+    const badge=document.getElementById('cart-badge');
+    const badgeM=document.getElementById('cart-badge-m');
+    const cont=document.getElementById('cart-items');
+    const totalEl=document.getElementById('cart-total');
+    const total=cart.reduce((s,c)=>s+c.price*c.quantity,0);
+    const count=cart.reduce((s,c)=>s+c.quantity,0);
+    [badge,badgeM].forEach(b=>{
+        if(!b) return;
+        if(count>0){b.classList.remove('hidden');b.classList.add('flex');b.textContent=count;}
+        else{b.classList.add('hidden');b.classList.remove('flex');}
+    });
+    if(!cart.length){
+        cont.innerHTML=`<div style="text-align:center;color:#a8a29e;padding:60px 0;">
+            <i class="fa-solid fa-basket-shopping" style="font-size:44px;opacity:0.2;display:block;margin-bottom:10px;"></i>
+            <p style="font-weight:500;font-size:14px;">Your selection is empty</p>
+            <p style="font-size:12px;margin-top:4px;">Browse our collection to add items</p>
+        </div>`;
+    } else {
+        cont.innerHTML=cart.map(item=>{
+            const img=item.image||PLACEHOLDERS[0];
+            return `<div style="display:flex;gap:11px;background:#fafaf9;padding:11px;border-radius:14px;">
+                <img src="${img}" style="width:62px;height:62px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#e7e5e4;" onerror="this.src='${ERR_IMG}'">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;color:#1c1917;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+                    <div style="color:#b87620;font-weight:600;font-size:12px;margin-top:2px;">R${item.price.toLocaleString()}</div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                        <button class="qty-btn" onclick="updateQty(${item.id},-1)">−</button>
+                        <span style="font-weight:700;font-size:15px;min-width:18px;text-align:center;">${item.quantity}</span>
+                        <button class="qty-btn" onclick="updateQty(${item.id},1)">+</button>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;">
+                    <button onclick="removeFromCart(${item.id})" style="background:none;border:none;cursor:pointer;color:#d6d3d1;font-size:18px;padding:0;line-height:1;">✕</button>
+                    <span style="font-weight:700;font-size:13px;color:#1c1917;">R${(item.price*item.quantity).toLocaleString()}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    totalEl.textContent='R'+total.toLocaleString();
+}
+function toggleCart(){
+    const p=document.getElementById('cart-panel'), o=document.getElementById('cart-overlay');
+    const open=p.classList.contains('open');
+    p.classList.toggle('open',!open); o.classList.toggle('hidden',open);
+}
+
+// ===== WHATSAPP =====
+function openWhatsApp(){
+    if(!cart.length){toast('⚠️ Cart is empty',true);return;}
+    const total=cart.reduce((s,c)=>s+c.price*c.quantity,0);
+    let msg='🌹 *Luxe Essence Order*\n─────────────────\n';
+    cart.forEach(i=>{msg+=`• *${i.name}* × ${i.quantity} = R${(i.price*i.quantity).toLocaleString()}\n`;});
+    msg+=`─────────────────\n*Total: R${total.toLocaleString()}*\n\nPlease confirm my order 🙏`;
+    const enc=encodeURIComponent(msg);
+    const pop=document.createElement('div');
+    pop.id='wa-pop';
+    pop.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    pop.innerHTML=`
+        <div style="background:white;border-radius:20px;padding:28px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.25);">
+            <div style="font-size:42px;margin-bottom:8px;">🛍️</div>
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;margin-bottom:6px;">Ready to Order?</h3>
+            <p style="color:#78716c;font-size:13px;margin-bottom:18px;line-height:1.6;">Choose a WhatsApp number to send your order:</p>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+                <a href="https://wa.me/${WA[0]}?text=${enc}" target="_blank"
+                   style="background:linear-gradient(135deg,#128C7E,#25D366);color:white;padding:14px 18px;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;">
+                   <i class="fa-brands fa-whatsapp" style="font-size:19px;"></i> 076 107 7323
+                </a>
+                <a href="https://wa.me/${WA[1]}?text=${enc}" target="_blank"
+                   style="background:linear-gradient(135deg,#128C7E,#25D366);color:white;padding:14px 18px;border-radius:12px;text-decoration:none;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;">
+                   <i class="fa-brands fa-whatsapp" style="font-size:19px;"></i> 079 833 0298
+                </a>
+            </div>
+            <button onclick="document.getElementById('wa-pop').remove()"
+                    style="color:#a8a29e;font-size:13px;background:none;border:none;cursor:pointer;padding:8px;">Cancel</button>
+        </div>`;
+    document.body.appendChild(pop);
+}
+
+// ===== TOAST =====
+let toastT;
+function toast(msg,err=false){
+    clearTimeout(toastT);
+    const t=document.getElementById('toast');
+    document.getElementById('toast-msg').textContent=msg;
+    document.getElementById('toast-icon').innerHTML=err
+        ?'<i class="fa-solid fa-circle-exclamation"></i>'
+        :'<i class="fa-solid fa-check-circle"></i>';
+    t.style.background=err?'#7f1d1d':'#1c1917';
+    t.classList.add('show');
+    toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+document.getElementById('edit-modal').addEventListener('click',function(e){if(e.target===this)closeEditModal();});
+</script>
+</body>
+</html>
